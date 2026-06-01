@@ -18,12 +18,12 @@ const DESKTOP_POINTS = [
 ];
 
 const MOBILE_POINTS = [
-  { x: 14, y: 52, side: "top", size: .68 },
-  { x: 28, y: 76, side: "bottom", size: .64 },
-  { x: 42, y: 52, side: "top", size: .68 },
-  { x: 56, y: 76, side: "bottom", size: .64 },
-  { x: 70, y: 52, side: "top", size: .68 },
-  { x: 84, y: 76, side: "bottom", size: .64 },
+  { x: 18, y: 50.8, side: "top", size: .62 },
+  { x: 18, y: 69.6, side: "bottom", size: .58 },
+  { x: 50, y: 50.8, side: "top", size: .62 },
+  { x: 50, y: 69.6, side: "bottom", size: .58 },
+  { x: 82, y: 50.8, side: "top", size: .62 },
+  { x: 82, y: 69.6, side: "bottom", size: .58 },
 ];
 
 const state = {
@@ -37,10 +37,14 @@ const state = {
   paused: false,
   timer: null,
   openPersonId: null,
+  focusPersonId: null,
+  focusRelatedIds: new Set(),
+  focusLocked: false,
   query: "",
 };
 
 const els = {
+  stage: document.getElementById("memory-stage"),
   layer: document.getElementById("timeline-layer"),
   search: document.getElementById("search-input"),
   prev: document.getElementById("prev-btn"),
@@ -141,7 +145,237 @@ function getAge(person) {
   return Number.isFinite(n) ? n : null;
 }
 
+
+const CUSTOM_APPEARANCE_ORDER = [
+  [
+    "ליבשטיין",
+    "אופיר"
+  ],
+  [
+    "צדיקביץ",
+    "עומר"
+  ],
+  [
+    "קוץ",
+    "אביב"
+  ],
+  [
+    "קוץ",
+    "ליבנת"
+  ],
+  [
+    "קוץ",
+    "רותם"
+  ],
+  [
+    "קוץ",
+    "יונתן"
+  ],
+  [
+    "קוץ",
+    "יפתח"
+  ],
+  [
+    "זוהר",
+    "יניב"
+  ],
+  [
+    "זוהר",
+    "יסמין"
+  ],
+  [
+    "זוהר",
+    "קשת"
+  ],
+  [
+    "זוהר",
+    "תכלת"
+  ],
+  [
+    "ליבשטיין",
+    "ניצן"
+  ],
+  [
+    "גולדשטיין",
+    "אלמוג",
+    "נדב"
+  ],
+  [
+    "גולדשטיין",
+    "אלמוג",
+    "ים"
+  ],
+  [
+    "אדמוני",
+    "מיכל"
+  ],
+  [
+    "אדמוני",
+    "גיא"
+  ],
+  [
+    "איתמרי",
+    "רם"
+  ],
+  [
+    "איתמרי",
+    "לילי"
+  ],
+  [
+    "ברדיצסקי",
+    "איתי"
+  ],
+  [
+    "ברדיצסקי",
+    "הדר"
+  ],
+  [
+    "אפשטיין",
+    "בלהה"
+  ],
+  [
+    "אפשטיין",
+    "נטע"
+  ],
+  [
+    "גורן",
+    "טובה"
+  ],
+  [
+    "גורן",
+    "ארן"
+  ],
+  [
+    "ורטהיים",
+    "דורית"
+  ],
+  [
+    "ורטהיים",
+    "אביב"
+  ],
+  [
+    "זיו",
+    "איתן"
+  ],
+  [
+    "פלג",
+    "זיו",
+    "תמי"
+  ],
+  [
+    "פלד",
+    "גילה"
+  ],
+  [
+    "פלד",
+    "יזהר"
+  ],
+  [
+    "פלד",
+    "דניאל"
+  ],
+  [
+    "פלש",
+    "יגאל"
+  ],
+  [
+    "פלש",
+    "תמר"
+  ],
+  [
+    "שוורצמן",
+    "דוד"
+  ],
+  [
+    "שוורצמן",
+    "אורלי"
+  ],
+  [
+    "עידן",
+    "צחי"
+  ],
+  [
+    "עידן",
+    "מעיין"
+  ],
+  [
+    "עידן",
+    "רועי"
+  ],
+  [
+    "עידן",
+    "סמדר"
+  ],
+  [
+    "אליקים",
+    "נועם"
+  ],
+  [
+    "ערבה",
+    "דקלה"
+  ],
+  [
+    "ערבה",
+    "אליעז",
+    "תומר"
+  ],
+  [
+    "רביב",
+    "ניב"
+  ],
+  [
+    "זיני",
+    "ניראל"
+  ],
+  [
+    "אלקבץ",
+    "סיון"
+  ],
+  [
+    "חסידים",
+    "נאור"
+  ],
+  [
+    "חגבי",
+    "זיו"
+  ],
+  [
+    "חגבי",
+    "יהונתן"
+  ],
+  [
+    "חגבי",
+    "אליצור"
+  ],
+  [
+    "חגבי",
+    "יזהר"
+  ]
+];
+
+function cleanOrderText(value) {
+  return normalizeText(value)
+    .replace(/ז"?ל|ז״ל/gu, "")
+    .replace(/[׳'`״"]/gu, "")
+    .replace(/[()\[\].,:;־\-–—]/gu, " ")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+function customOrderRank(person) {
+  const text = cleanOrderText(`${person.name || ""} ${formatDisplayName(person.name || "")}`);
+  const index = CUSTOM_APPEARANCE_ORDER.findIndex((tokens) =>
+    tokens.every((token) => text.includes(cleanOrderText(token)))
+  );
+  return index >= 0 ? index : Number.MAX_SAFE_INTEGER;
+}
+
 function sortPeople(a, b) {
+  const rankA = customOrderRank(a);
+  const rankB = customOrderRank(b);
+
+  if (rankA !== rankB) return rankA - rankB;
+
   const ageA = getAge(a);
   const ageB = getAge(b);
 
@@ -153,7 +387,7 @@ function sortPeople(a, b) {
 }
 
 function points() {
-  return window.matchMedia("(max-width: 760px)").matches ? MOBILE_POINTS : DESKTOP_POINTS;
+  return window.matchMedia("(max-width: 900px) and (orientation: portrait)").matches ? MOBILE_POINTS : DESKTOP_POINTS;
 }
 
 function visibleCount() {
@@ -212,6 +446,123 @@ function isGuardMember(person) {
   return ["כיתת הכוננות", "כיתת כוננות", "רבש\"ץ", "סגן רבש\"ץ"].some((term) => text.includes(term));
 }
 
+
+function escapeRegex(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function cleanPersonKey(value) {
+  return stripMemorialSuffix(value)
+    .replace(/[״"']/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function firstNameCandidates(person) {
+  const parts = displayNameParts(person.name);
+  if (!parts.length) return [];
+
+  const firstParts = parts.length > 1 ? parts.slice(0, -1) : parts;
+  const candidates = [
+    firstParts.join(" "),
+    firstParts[0],
+    parts.join(" "),
+  ];
+
+  return [...new Set(candidates.filter(Boolean).map(cleanPersonKey))];
+}
+
+function lineMentionsCandidate(line, candidate) {
+  const text = cleanPersonKey(line);
+  const clean = cleanPersonKey(candidate);
+  if (!clean || clean.length < 2) return false;
+
+  const escaped = escapeRegex(clean);
+  const boundary = "(^|[\\s,.;:־\\-()])";
+  const endBoundary = "($|[\\s,.;:־\\-()])";
+  const directPattern = new RegExp(`${boundary}${escaped}${endBoundary}`, "u");
+
+  if (directPattern.test(text)) return true;
+
+  // Hebrew lists often attach ו before the final name: "רותם ויפתח".
+  if (!clean.includes(" ")) {
+    const withVavPattern = new RegExp(`${boundary}ו${escaped}${endBoundary}`, "u");
+    return withVavPattern.test(text);
+  }
+
+  return false;
+}
+
+function personMentionsOther(person, other) {
+  const lines = relativesLines(person).join(" · ");
+  if (!lines) return false;
+  return firstNameCandidates(other).some((candidate) => lineMentionsCandidate(lines, candidate));
+}
+
+function isDirectFamilyBond(a, b) {
+  if (!a || !b || a.id === b.id) return false;
+
+  if (a.familyGroupId && b.familyGroupId && a.familyGroupId === b.familyGroupId) return true;
+
+  if (personMentionsOther(a, b) || personMentionsOther(b, a)) return true;
+
+  // A gentle fallback for household groups where the uploaded data used the same family name.
+  const aParts = displayNameParts(a.name);
+  const bParts = displayNameParts(b.name);
+  const aSurname = aParts.length > 1 ? aParts[aParts.length - 1] : "";
+  const bSurname = bParts.length > 1 ? bParts[bParts.length - 1] : "";
+  const familyText = `${relativesLines(a).join(" ")} ${relativesLines(b).join(" ")}`;
+
+  return Boolean(aSurname && bSurname && aSurname === bSurname && /אח|אחות|אימ|אב|בנם|בתם|בעלה|אשתו|בן זוג|בת זוג/u.test(familyText));
+}
+
+function relatedIdsFor(person) {
+  const ids = new Set();
+
+  state.people.forEach((other) => {
+    if (isDirectFamilyBond(person, other)) ids.add(other.id);
+  });
+
+  return ids;
+}
+
+function updateFocusClasses() {
+  const hasFocus = Boolean(state.focusPersonId);
+
+  els.stage?.classList.toggle("is-focus-mode", hasFocus);
+  els.stage?.classList.toggle("is-focus-locked", Boolean(state.focusLocked));
+
+  els.layer.querySelectorAll(".person-node").forEach((node) => {
+    const id = node.dataset.personId;
+    const focused = hasFocus && id === state.focusPersonId;
+    const related = hasFocus && state.focusRelatedIds.has(id);
+
+    node.classList.toggle("is-focused", focused);
+    node.classList.toggle("is-related", related);
+    node.classList.toggle("is-dimmed", hasFocus && !focused && !related);
+  });
+}
+
+function focusPerson(person, locked = false) {
+  if (!person) return;
+
+  state.focusPersonId = person.id;
+  state.focusRelatedIds = relatedIdsFor(person);
+  state.focusLocked = locked;
+
+  updateFocusClasses();
+}
+
+function clearFocusMode(force = false) {
+  if (state.openPersonId && !force) return;
+
+  state.focusPersonId = null;
+  state.focusRelatedIds = new Set();
+  state.focusLocked = false;
+
+  updateFocusClasses();
+}
+
 function getPhotoSources(photo) {
   if (!photo) return { src: "", srcset: "" };
   return {
@@ -223,7 +574,7 @@ function getPhotoSources(photo) {
 function createPortraitImage(person) {
   const sources = getPhotoSources(person.photo);
   const img = el("img", {
-    src: sources.src || "images/portrait_placeholder.svg",
+    src: sources.src || "",
     alt: `תמונה של ${formatDisplayName(person.name)}`,
     loading: "lazy",
     decoding: "async",
@@ -231,10 +582,18 @@ function createPortraitImage(person) {
 
   if (sources.srcset) img.setAttribute("srcset", sources.srcset);
 
+  // In the no-images package, image files are intentionally omitted.
+  // Replace missing images with an in-DOM initials placeholder instead of
+  // falling back to a missing SVG, which made Chrome display the full alt text
+  // inside the portrait circle and visually overlap the name tags on mobile.
   img.onerror = () => {
     img.onerror = null;
-    img.removeAttribute("srcset");
-    img.src = "images/portrait_placeholder.svg";
+    const fallback = el("span", {
+      class: "portrait-placeholder",
+      text: initials(person.name),
+      "aria-hidden": "true",
+    });
+    img.replaceWith(fallback);
   };
 
   return img;
@@ -258,6 +617,7 @@ function updatePathProgress() {
 }
 
 function applySearch(query) {
+  clearFocusMode(true);
   state.query = normalizeText(query);
 
   const source = !state.query
@@ -322,6 +682,7 @@ function renderAllVisible(options = {}) {
   });
 
   updatePathProgress();
+  updateFocusClasses();
   syncStoryFromQuery();
 }
 
@@ -335,6 +696,7 @@ function renderPersonNode(person, index) {
     dataset: { personId: person.id, slotIndex: String(index) },
     style: {
       right: `${point.x}%`,
+      left: "auto",
       top: `${point.y}%`,
       "--node-w": `${7.7 * scale}rem`,
       "--photo-w": `${6.25 * scale}rem`,
@@ -350,7 +712,16 @@ function renderPersonNode(person, index) {
     class: "person-button",
     type: "button",
     "aria-label": `פתיחת הסיפור של ${formatDisplayName(person.name)}`,
-    onClick: () => openStory(person),
+    onPointerEnter: () => focusPerson(person),
+    onPointerLeave: () => clearFocusMode(),
+    onFocus: () => focusPerson(person),
+    onBlur: () => clearFocusMode(),
+    onClick: () => {
+      focusPerson(person, true);
+
+      // Let the dim-and-illuminate moment register before the story opens.
+      window.setTimeout(() => openStory(person), 260);
+    },
   });
 
   button.append(
@@ -418,14 +789,20 @@ function replaceNode(slotIndex, person) {
 
   if (!oldNode) {
     els.layer.append(newNode);
-    requestAnimationFrame(() => newNode.classList.add("is-visible"));
+    requestAnimationFrame(() => {
+      newNode.classList.add("is-visible");
+      updateFocusClasses();
+    });
     return;
   }
 
   oldNode.classList.add("is-leaving");
   setTimeout(() => {
     if (oldNode.isConnected) oldNode.replaceWith(newNode);
-    requestAnimationFrame(() => newNode.classList.add("is-visible"));
+    requestAnimationFrame(() => {
+      newNode.classList.add("is-visible");
+      updateFocusClasses();
+    });
   }, 1050);
 }
 
@@ -504,6 +881,34 @@ function relativesSection(person) {
   );
 }
 
+function familyGroupSection(person) {
+  if (!person.familyGroupId || !person.familyGroupPhoto) return null;
+
+  const members = Array.isArray(person.familyGroupMembers)
+    ? person.familyGroupMembers.filter(Boolean)
+    : [];
+
+  return el("section", { class: "family-group-card", "aria-label": `תמונת קשר משפחתי: ${person.familyGroupTitle || formatDisplayName(person.name)}` },
+    el("div", { class: "family-group-image-wrap" },
+      el("img", {
+        class: "family-group-image",
+        src: person.familyGroupPhoto,
+        alt: person.familyGroupTitle || "תמונה משפחתית",
+        loading: "lazy",
+        decoding: "async",
+      })
+    ),
+    el("div", { class: "family-group-copy" },
+      el("span", { class: "family-group-kicker", text: person.familyGroupRelation || "קשר משפחתי" }),
+      el("h3", { text: person.familyGroupTitle || "נרצחו יחד" }),
+      person.familyGroupNote ? el("p", { text: person.familyGroupNote }) : null,
+      members.length ? el("div", { class: "family-group-members" },
+        members.map((member) => el("span", { text: member }))
+      ) : null
+    )
+  );
+}
+
 function storyDetails(person) {
   const items = [
     ["יישוב", person.community || "לא צוין"],
@@ -524,6 +929,7 @@ function storyDetails(person) {
 }
 
 function openStory(person) {
+  focusPerson(person, true);
   state.openPersonId = person.id;
 
   const url = new URL(window.location.href);
@@ -537,6 +943,7 @@ function openStory(person) {
 function closeStory() {
   state.openPersonId = null;
   els.storyRoot.replaceChildren();
+  clearFocusMode(true);
 
   const url = new URL(window.location.href);
   url.searchParams.delete("id");
@@ -587,6 +994,7 @@ function renderStory(person) {
         el("div", { class: "story-actions" }, candleBtn)
       )
     ),
+    familyGroupSection(person),
     relativesSection(person),
     storyDetails(person)
   );
