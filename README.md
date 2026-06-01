@@ -36,3 +36,11 @@ V6 mobile rechecked:
 - More spacing between top-row labels and lower-row portraits.
 - Portrait size tuned for 320px and larger phones.
 - Modal/story mobile protection improved.
+
+
+Excel summaries update:
+- Integrated 85 not-too-short summaries from the uploaded Excel-derived summary JSON.
+- Matched every person to their Excel row and wrote summary_match_report.csv.
+- Updated data.json and data.js.
+- Added cache-busting query strings in index.html.
+- images/ folder omitted.
