@@ -44,3 +44,14 @@ Excel summaries update:
 - Updated data.json and data.js.
 - Added cache-busting query strings in index.html.
 - images/ folder omitted.
+
+
+Long Excel summaries + relatives update:
+- Rebuilt storySummary/storySummaryClean from the full Excel row content, with longer descriptions.
+- Updated first-degree family fields and relativesLines.
+- Added excel_long_summaries_and_relatives_report.csv for checking each row match.
+- Added cache busting version long-excel-relatives-v4.
+- images/ folder omitted.
+
+
+V11 polish: cleaned generic attack boilerplate from summaries and fixed several relation/summary edge cases.

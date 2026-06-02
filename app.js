@@ -502,18 +502,12 @@ function personMentionsOther(person, other) {
 function isDirectFamilyBond(a, b) {
   if (!a || !b || a.id === b.id) return false;
 
+  if (Array.isArray(a.relatedIds) && a.relatedIds.includes(b.id)) return true;
+  if (Array.isArray(b.relatedIds) && b.relatedIds.includes(a.id)) return true;
+
   if (a.familyGroupId && b.familyGroupId && a.familyGroupId === b.familyGroupId) return true;
 
-  if (personMentionsOther(a, b) || personMentionsOther(b, a)) return true;
-
-  // A gentle fallback for household groups where the uploaded data used the same family name.
-  const aParts = displayNameParts(a.name);
-  const bParts = displayNameParts(b.name);
-  const aSurname = aParts.length > 1 ? aParts[aParts.length - 1] : "";
-  const bSurname = bParts.length > 1 ? bParts[bParts.length - 1] : "";
-  const familyText = `${relativesLines(a).join(" ")} ${relativesLines(b).join(" ")}`;
-
-  return Boolean(aSurname && bSurname && aSurname === bSurname && /אח|אחות|אימ|אב|בנם|בתם|בעלה|אשתו|בן זוג|בת זוג/u.test(familyText));
+  return false;
 }
 
 function relatedIdsFor(person) {
@@ -896,6 +890,11 @@ function familyGroupSection(person) {
         alt: person.familyGroupTitle || "תמונה משפחתית",
         loading: "lazy",
         decoding: "async",
+        onerror: (event) => {
+          const wrap = event.currentTarget.closest(".family-group-image-wrap");
+          if (wrap) wrap.classList.add("is-missing");
+          event.currentTarget.remove();
+        },
       })
     ),
     el("div", { class: "family-group-copy" },
