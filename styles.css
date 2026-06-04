@@ -5161,3 +5161,11 @@ html, body, button, input, textarea, select, .memory-stage, .ghost-btn, .search-
     margin-inline: 1rem !important;
   }
 }
+
+
+/* Press safety: cards cannot be opened while they are fading in/out. */
+.person-node.is-entering,
+.person-node.is-entering.is-visible,
+.person-node.is-leaving {
+  pointer-events: none !important;
+}
