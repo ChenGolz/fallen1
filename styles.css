@@ -3051,7 +3051,7 @@ html, body, button, input, textarea, select, .memory-stage, .ghost-btn, .search-
   }
 
   .search-box {
-    top: 36.8% !important;
+    top: 35.9% !important;
     width: min(82vw, 22rem) !important;
     height: 2.35rem !important;
     padding: .34rem .76rem !important;
@@ -3216,7 +3216,7 @@ html, body, button, input, textarea, select, .memory-stage, .ghost-btn, .search-
   }
 
   .search-box {
-    top: 35.5% !important;
+    top: 34.9% !important;
     width: 83vw !important;
     height: 2.12rem !important;
   }
@@ -3264,7 +3264,7 @@ html, body, button, input, textarea, select, .memory-stage, .ghost-btn, .search-
 
 @media (min-height: 760px) and (max-width: 900px) and (orientation: portrait) {
   .search-box {
-    top: 35.8% !important;
+    top: 35.1% !important;
   }
 
   .person-node[data-slot-index="0"],
